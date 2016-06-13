@@ -1,0 +1,84 @@
+Columbo Simple Serial Library
+http://cssl.sourceforge.net
+Copyright 2003 Marcin Siennicki m.siennicki@cloos.pl
+see COPYING file for details
+
+
+To compile install this you will need libtool and
+GNU make. If you got it, just cd to libcssl directory,
+look into Makefile - you can change destination directory
+for the library files (it is set to /usr/lib), then type:
+
+$ make
+
+--Note for RedHat and other RPM systems users----------
+If you like to create RPM files: edit Makefile - it is
+configured for RedHat. Change SRPMPATH, RPMPATH,
+SRPMNAME and RPMNAME to proper settings (you don't
+need to do it under RedHat or Aurox). Then run:
+
+$ make rpm
+
+or (if you haven't privileges to /usr/src/redhat dirs):
+
+$ su
+Password:
+# make rpm
+
+the rpms should appear in the source directory.
+------------------------------------------------------
+
+I everything was ok then you can test it. Connect
+your  serial port (ttyS0) to other one - it can be
+a character terminal, other machine or just your
+second serial port (ttyS0). If the remote device is a pc
+then run a terminal emulator on it (for example minicom).
+Configure remote device's serial port as follows:
+
+baudrate: 19200
+data bits: 8
+parity: none
+stop bits: 1
+flow control: none
+
+Then run:
+
+$ ./test
+
+If there's file access error, try:
+
+$ su
+Password:
+# ./test
+
+Now it should be everything OK.
+
+You should see a text on the remote device. Type some
+text on the remote keyboard. You should see it on your
+linux screen. Ctrl-D on the remote or Ctrl-C on local
+machine finishes program.
+
+If it did work, type:
+
+# make install,
+
+or, for rpm users:
+
+# rpm -Uhv <put_rpm_filename_here>
+(for example: # rpm -Uhv libcssl-0.9.3-1.i386.rpm)
+
+Now check if shared linking works:
+
+$ make test.shared
+$ ./test.shared
+
+And then you can compile your programs against libcssl.
+Don't forget to read README file. If you find the library
+useful, and you realy use it - please let me know about it.
+
+If it didn't work, feel free to email me and describe the
+problem.
+
+Marcin Siennicki
+m.siennicki@cloos.pl
+

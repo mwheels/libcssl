@@ -1,0 +1,203 @@
+This is a short description of Columbo Simple Serial Library.
+http://cssl.sourceforge.net
+
+1) Installing libcssl
+
+2) Compiling and linking your applications against libcssl
+
+3) Using libcssl
+
+   - Event driven mode
+     a) callback function
+     b) starting
+     c) openig ports
+     d) setting flow cotrol
+     e) sending data
+     f) receiving data
+     g) changing port setup
+     h) errors
+     i) finishing
+
+   - Blocking mode
+     a) notes
+     b) setting the timeout value
+     c) receiving data
+
+===========================================================
+1) Installing libcssl
+Read INSTALL file
+
+===========================================================
+2) Compiling and linking your applications against libcssl
+
+First, in your C files you should include libcssl.h:
+
+#include <cssl.h>
+
+To compile and link your program against libcssl do for
+example as follows:
+
+$ gcc -Wall -O -o my_program my_program.c -lcssl
+
+You can use pkg-config too:
+
+$ -Wall -O -o my_program `pkg-config --cflags --libs libcssl` my_program.c
+===========================================================
+3) Using libcssl
+
+   - Event driven mode
+      a) write a callback function, for example:
+
+         void callback_function(int id, unit8_t *buf, int buflen)
+         {
+              int i;
+              for(i=0;i<buflen;i++) {
+                   putchar(buf[i]);
+              }
+              fflush(stdout);
+         }
+
+         The callback function is executed when a data arrives
+         on your serial port. It gets three variables:
+         int id - the ID of the port. You set it while port opening.
+                  It can be useful for you to identify the port
+                  when you use the callback_function for more then
+                  one serial port.
+         uint8_t *buf - incoming data
+         int buflen - incoming data length.
+
+         The example callback you see just copies the data to stdout.
+
+      b) start libcssl:
+
+         cssl_start()
+
+
+      c) open a port:
+
+         cssl_t *serial;
+         serial=cssl_open(path,
+                          callback_function,
+                          id,
+                          baud,
+                          bits,
+                          parity,
+                          stopbits);
+
+         cssl_open creates new cssl_t structure, opens the port,
+         and sets it up. It sets flow control to 'none'.
+
+            path - path to the port special file, for example: "/dev/ttyS0"
+            callback_function - your callback function,
+            id - port id, you could nedd it only when you use more then
+                 one port
+            baud - baudrate you want set for the port, integer:
+                   150,300,600,1200,2400,4800,9600,19200,38400,57600,115200
+            parity - parity bit:
+                   0-none, 1-odd, 2-even
+            bits - bits per character: 7 or 8
+            stopbits - as the name says: 1 or 2
+           
+      d) cssl_open and cssl_setup always set up flow control to 'none'.
+         To change this use:
+
+            cssl_setflowcontrol(cssl_t *serial, int rtscts, int xonxoff);
+
+          rtscts - give 1 when you want hardware (RTS/CTS) flow control,
+                   0 if you don't want it.
+          xonxoff - give 1 when you want software (XON/XOFF) flow control,
+                   0 if you don't want it.
+
+         Of course you can use both.
+
+      e) Sending data
+         ---
+         cssl_putchar(cssl_t *serial, char c);
+
+         It sends one char to the serial port, example:
+         cssl_putchar(serial,'A');
+         ---
+         cssl_putstring(cssl_t *serial, char *str);
+
+         It sends null terminated string to the port, example:
+         cssl_putstring(serial,"Hello, world!");
+         ---
+         cssl_putdata(cssl_t *serial, uint8_t *buf, int len);
+
+         It sends a data buffer to the port. Example:
+         uint8_t *buffer={1,2,3,4,5,6,7,8};
+         (...)
+         cssl_putdata(serial,buffer,8);
+         ---
+         cssl_drain(cssl_t *serial);
+
+         It waits until all data sent to the port has been transmited.
+
+      f) Receiving data.
+         You do it via callback function.
+
+      g) Changing port setup.
+
+         cssl_setup(serial
+                    baud,
+                    bits,
+                    parity,
+                    stopbits);
+
+         Look at cssl_open.
+
+      h) Errors
+         After every operation libcssl sets the error code.
+         You can get it with:
+
+         int cssl_geterror();
+
+         Or you can get the status massage with:
+
+         char *cssl_geterrormsg();
+
+         If everything is OK, the error code should be CSSL_OK.
+
+      i) Finishig
+
+         cssl_close(cssl_t *serial)
+
+         It closes the port and frees the port's resources.
+
+         cssl_stop()
+
+         It closes all the ports, and stops receiving of signals
+
+   - Blocking mode
+     This feature is not tested.
+
+     a) To use the port in blocking mode (your machine will wait for
+        characters) just set callback_function to NULL. Everething
+        else will work as in event driven mode.
+
+     b) Setting the port timeout:
+
+        cssl_set_timeout(cssl_t *serial, int timeout);
+
+        It sets the timeout for the port. The unit is decisecond (hundred
+        of miliseconds)
+
+     c) Receiving data:
+
+        int cssl_getchar(cssl_t *serial);
+
+        It gets a character from the port, and returns it or -1,
+        when an error occured (for example timeout).
+
+        int cssl_getdata(cssl_t *serial, uint8_t *buffer, int buflen)
+
+        It reads data from the port, places it into the given buffer.
+        It returns when error occurs or when it has read buflen bytes.
+        The function returns number of read data.
+
+
+If you didn't understand everything then read test.c, cssl.c
+and cssl.h files.
+
+Marcin Siennicki
+m.siennicki@cloos.pl
